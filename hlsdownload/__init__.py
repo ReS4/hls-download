@@ -2,6 +2,7 @@
 # Use of this source code is governed by a MIT License
 # license that can be found in the LICENSE file.
 # Author: Jonas Birme (Eyevinn Technology)
+import certifi
 
 import m3u8
 import shutil
@@ -157,6 +158,7 @@ class SegmentList:
             debug.log('Downloading %s to %s%s' % (item['remoteurl'], item['downloaddir'], item['localfname']))
             fp = open(item['downloaddir'] + item['localfname'], 'wb')
             c = pycurl.Curl()
+            c.setopt(pycurl.CAINFO, certifi.where())
             c.setopt(c.URL, item['remoteurl'])
             c.setopt(c.WRITEDATA, fp)
             c.perform()
@@ -180,7 +182,8 @@ class SegmentList:
             localfname = tail
             if not os.path.isfile(self.downloaddir + localfname):
                 item = { 
-                    'remoteurl': self.m3u8_obj.base_uri + seg.uri,
+                    # 'remoteurl': self.m3u8_obj.base_uri + seg.uri,
+                    'remoteurl': "https://video.twimg.com" + seg.uri,
                     'localfname': localfname,
                     'downloaddir': self.downloaddir
                 }
