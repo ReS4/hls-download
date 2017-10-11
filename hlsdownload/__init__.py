@@ -2,9 +2,6 @@
 # Use of this source code is governed by a MIT License
 # license that can be found in the LICENSE file.
 # Author: Jonas Birme (Eyevinn Technology)
-import certifi
-
-import m3u8
 import shutil
 import shlex
 import ntpath
@@ -17,7 +14,11 @@ from Queue import Queue
 from threading import Thread
 from urlparse import urlparse
 
+import certifi
+import m3u8
+
 logger = logging.getLogger('hlsdownload')
+
 
 class HLSDownloader:
     def __init__(self, manifesturi, tmpdir, cleanup=True):
@@ -31,7 +32,7 @@ class HLSDownloader:
         logger.info('Downloading and parsing HLS manifest from %s' % self.manifesturi)
         m3u8_obj = m3u8.load(self.manifesturi)
         if not m3u8_obj.is_variant:
-            raise Exception('%s is not a master manifest' % self.manifesturi) 
+            raise Exception('%s is not a master manifest' % self.manifesturi)
         listlengths = []
         for mediaplaylist in m3u8_obj.playlists:
             url = urlparse(self.manifesturi)
@@ -121,6 +122,7 @@ class HLSDownloader:
             if self.cleanup:
                 self._cleanup()
 
+
 class SegmentList:
     def __init__(self, mediaplaylisturi, bitrate, downloaddir):
         self.mediaplaylisturi = mediaplaylisturi
@@ -142,7 +144,7 @@ class SegmentList:
         if m:
             return m.group(1)
         return None
-    
+
     def getLength(self):
         return len(self.m3u8_obj.segments)
 
@@ -181,7 +183,7 @@ class SegmentList:
             head, tail = ntpath.split(self.downloaddir + seg.uri)
             localfname = tail
             if not os.path.isfile(self.downloaddir + localfname):
-                item = { 
+                item = {
                     # 'remoteurl': self.m3u8_obj.base_uri + seg.uri,
                     'remoteurl': "https://video.twimg.com" + seg.uri,
                     'localfname': localfname,
@@ -196,9 +198,11 @@ class SegmentList:
     def convertWorker(self):
         while True:
             item = self.cq.get()
-            debug.log('Converting %s%s to %s%s' % (item['downloaddir'], item['localfname'], item['downloaddir'], item['mp4fname']))
+            debug.log('Converting %s%s to %s%s' % (
+            item['downloaddir'], item['localfname'], item['downloaddir'], item['mp4fname']))
             if not os.path.isfile(item['downloaddir'] + item['mp4fname']):
-                FFMpegCommand(item['downloaddir'] + item['localfname'], item['downloaddir'] + item['mp4fname'], '-acodec copy -avoid_negative_ts 1 -bsf:a aac_adtstoasc -vcodec copy -copyts')
+                FFMpegCommand(item['downloaddir'] + item['localfname'], item['downloaddir'] + item['mp4fname'],
+                              '-acodec copy -avoid_negative_ts 1 -bsf:a aac_adtstoasc -vcodec copy -copyts')
             self.cq.task_done()
 
     def convert(self):
@@ -223,15 +227,15 @@ class SegmentList:
         if not os.path.isfile(output):
             lstfile = open(self.downloaddir + output + '.lst', 'w')
             for mp4fname in self.mp4segs:
-                lstfile.write("file '%s'\n" % mp4fname)      
+                lstfile.write("file '%s'\n" % mp4fname)
             lstfile.close()
-            FFMpegConcat(self.downloaddir + output + '.lst', output)
+            FFMpegConcat(self.downloaddir + output + '.lst', self.downloaddir + output)
             logger.info("Segments converted")
 
     def getDiscontinuities(self):
         discont = []
         position = 0.0
-        for seg in self.m3u8_obj.segments: 
+        for seg in self.m3u8_obj.segments:
             if seg.discontinuity:
                 discont.append(position)
             position += float(seg.duration)
@@ -240,6 +244,7 @@ class SegmentList:
     def cleanup(self):
         if os.path.exists(self.downloaddir):
             shutil.rmtree(self.downloaddir)
+
 
 def runcmd(cmd, name):
     debug.log('COMMAND: %s' % cmd)
@@ -255,6 +260,7 @@ def runcmd(cmd, name):
     except OSError as e:
         raise Exception('Command %s not found, ensure that it is in your path' % name)
 
+
 def FFMpegCommand(infile, outfile, opts):
     cmd = [os.path.basename('ffmpeg')]
     cmd.append('-i')
@@ -264,6 +270,7 @@ def FFMpegCommand(infile, outfile, opts):
     cmd.append(outfile)
     runcmd(cmd, 'ffmpeg')
 
+
 def FFMpegConcat(lstfile, outfile):
     cmd = [os.path.basename('ffmpeg')]
     cmd.append('-f')
@@ -271,7 +278,7 @@ def FFMpegConcat(lstfile, outfile):
     cmd.append('-safe')
     cmd.append('0')
     cmd.append('-i')
-    cmd.append(lstfile) 
+    cmd.append(lstfile)
     cmd.append('-c')
     cmd.append('copy')
     cmd.append(outfile)
