@@ -97,9 +97,9 @@ class HLSDownloader:
         for segmentlist in self.bitrates:
             if bitrate:
                 if segmentlist.getBitrate() == bitrate:
-                    segmentlist.concat(output)
+                    segmentlist.concat(output, self.tmpdir)
             else:
-                segmentlist.concat(output)
+                segmentlist.concat(output, self.tmpdir)
 
     def _cleanup(self):
         for segmentlist in self.bitrates:
@@ -221,15 +221,15 @@ class SegmentList:
             self.cq.put(item)
         self.cq.join()
 
-    def concat(self, outputname):
-        output = outputname + '-' + str(self.bitrate) + '.mp4'
+    def concat(self, outputname, output_path=None):
+        output = outputname + '_' + str(self.bitrate) + '.mp4'
         logger.info("Converting segments and writing to %s" % output)
         if not os.path.isfile(output):
             lstfile = open(self.downloaddir + output + '.lst', 'w')
             for mp4fname in self.mp4segs:
                 lstfile.write("file '%s'\n" % mp4fname)
             lstfile.close()
-            FFMpegConcat(self.downloaddir + output + '.lst', "/var/www/twittna/static/" + output)
+            FFMpegConcat(self.downloaddir + output + '.lst', output if not output_path else output_path + "/" + output)
             logger.info("Segments converted")
 
     def getDiscontinuities(self):
