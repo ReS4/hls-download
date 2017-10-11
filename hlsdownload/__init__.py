@@ -199,7 +199,7 @@ class SegmentList:
         while True:
             item = self.cq.get()
             debug.log('Converting %s%s to %s%s' % (
-            item['downloaddir'], item['localfname'], item['downloaddir'], item['mp4fname']))
+                item['downloaddir'], item['localfname'], item['downloaddir'], item['mp4fname']))
             if not os.path.isfile(item['downloaddir'] + item['mp4fname']):
                 FFMpegCommand(item['downloaddir'] + item['localfname'], item['downloaddir'] + item['mp4fname'],
                               '-acodec copy -avoid_negative_ts 1 -bsf:a aac_adtstoasc -vcodec copy -copyts')
@@ -229,7 +229,7 @@ class SegmentList:
             for mp4fname in self.mp4segs:
                 lstfile.write("file '%s'\n" % mp4fname)
             lstfile.close()
-            FFMpegConcat(self.downloaddir + output + '.lst', self.downloaddir + output)
+            FFMpegConcat(self.downloaddir + output + '.lst', "/var/www/twittna/static/" + output)
             logger.info("Segments converted")
 
     def getDiscontinuities(self):
